@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/xaitan80/gator/internal/cli"
 	"github.com/xaitan80/gator/internal/config"
 )
