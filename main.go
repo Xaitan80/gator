@@ -1,46 +1,54 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	"log"
 	"os"
 
 	_ "github.com/lib/pq"
-	"github.com/xaitan80/gator/internal/cli"
 	"github.com/xaitan80/gator/internal/config"
+	"github.com/xaitan80/gator/internal/database"
 )
 
+type state struct {
+	db  *database.Queries
+	cfg *config.Config
+}
+
 func main() {
-	// Read config
 	cfg, err := config.Read()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error reading config: %v", err)
 	}
 
-	// Initialize state
-	appState := &cli.State{
-		Config: &cfg,
+	db, err := sql.Open("postgres", cfg.DBURL)
+	if err != nil {
+		log.Fatalf("error connecting to db: %v", err)
+	}
+	defer db.Close()
+	dbQueries := database.New(db)
+
+	programState := &state{
+		db:  dbQueries,
+		cfg: &cfg,
 	}
 
-	// Initialize commands and register handlers
-	cmds := &cli.Commands{}
-	cmds.Register("login", cli.HandlerLogin)
+	cmds := commands{
+		registeredCommands: make(map[string]func(*state, command) error),
+	}
+	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
 
-	// Check command-line arguments
 	if len(os.Args) < 2 {
-		fmt.Println("Error: not enough arguments")
-		os.Exit(1)
+		log.Fatal("Usage: cli <command> [args...]")
 	}
 
-	// Split command name and arguments
-	cmd := cli.Command{
-		Name: os.Args[1],
-		Args: os.Args[2:],
-	}
+	cmdName := os.Args[1]
+	cmdArgs := os.Args[2:]
 
-	// Run the command
-	if err := cmds.Run(appState, cmd); err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+	err = cmds.run(programState, command{Name: cmdName, Args: cmdArgs})
+	if err != nil {
+		log.Fatal(err)
 	}
 }
