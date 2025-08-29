@@ -56,34 +56,22 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
+func handlerListUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("couldn't list users: %w", err)
+	}
+	for _, user := range users {
+		if user.Name == s.cfg.CurrentUserName {
+			fmt.Printf("* %v (current)\n", user.Name)
+			continue
+		}
+		fmt.Printf("* %v\n", user.Name)
+	}
+	return nil
+}
+
 func printUser(user database.User) {
 	fmt.Printf(" * ID:      %v\n", user.ID)
 	fmt.Printf(" * Name:    %v\n", user.Name)
-}
-func handlerReset(s *state, cmd command) error {
-	err := s.db.ResetUsers(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to reset database: %w", err)
-	}
-
-	fmt.Println("Database has been reset successfully.")
-	return nil
-}
-func handlerUsers(s *state, cmd command) error {
-	users, err := s.db.GetUsers(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to fetch users: %w", err)
-	}
-
-	currentUser := s.cfg.CurrentUserName // assuming this is how you store current user
-
-	for _, u := range users {
-		if u.Name == currentUser {
-			fmt.Printf("* %s (current)\n", u.Name)
-		} else {
-			fmt.Printf("* %s\n", u.Name)
-		}
-	}
-
-	return nil
 }
