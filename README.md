@@ -1,6 +1,6 @@
-# Gator CLI
+# gator CLI
 
-Gator is a command-line tool to manage RSS feeds and aggregate posts into a PostgreSQL database. It allows you to register feeds, follow them, and continuously fetch and store posts.
+gator is a command-line tool to manage RSS feeds and aggregate posts into a PostgreSQL database. It allows you to register feeds, follow them, and continuously fetch and store posts.
 
 ---
 
